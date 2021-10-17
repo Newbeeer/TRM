@@ -41,26 +41,7 @@ test_unbiased_places = [
 
 biased_places = biased_places + unbiased_places + validation_unbiased_places + test_unbiased_places
 NUM_CLASSES = len(biased_places)
-# extract 'em one by one
-# thing = os.path.join('../data/places', 'train_256_places365standard.tar')
-# for place in biased_places:
-#     print(place)
-#     output = subprocess.check_output(['tar', '-xvf', thing, '-C', '../data/places/data_256/{}'.format(place)])
-#     print(output)
-#
-# for place in unbiased_places:
-#     output = subprocess.check_output(['tar', '-xvf', thing, '-C', os.environ['SLURM_TMPDIR'], 'data_256/{}'.format(place)])
-#     print(output)
-#
-# for place in validation_unbiased_places:
-#     output = subprocess.check_output(['tar', '-xvf', thing, '-C', os.environ['SLURM_TMPDIR'], 'data_256/{}'.format(place)])
-#     print(output)
-#
-# for place in test_unbiased_places:
-#     output = subprocess.check_output(['tar', '-xvf', thing, '-C', os.environ['SLURM_TMPDIR'], 'data_256/{}'.format(place)])
-#     print(output)
-#
-# print('Done!')
+
 
 print('----- Bias places ------')
 print(biased_places)

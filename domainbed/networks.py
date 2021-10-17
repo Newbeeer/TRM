@@ -53,7 +53,7 @@ class ResNet(torch.nn.Module):
     """ResNet with the softmax chopped off and the batchnorm frozen"""
     def __init__(self, input_shape, hparams):
         super(ResNet, self).__init__()
-        if hparams['resnet18']:
+        if not hparams['resnet50']:
             self.network = resnet.resnet18(pretrained=True)
             self.n_outputs = 512
         else:

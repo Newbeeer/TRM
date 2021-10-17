@@ -12,7 +12,7 @@ def _hparams(algorithm, dataset, random_state, args):
     hparams = {}
     hparams['opt'] = (args.opt, args.opt)
     hparams['data_augmentation'] = (True, True)
-    hparams['resnet18'] = (args.resnet18, False)
+    hparams['resnet50'] = (args.resnet50, False)
     hparams['resnet_dropout'] = (0., random_state.choice([0., 0.1, 0.5]))
     hparams['class_balanced'] = (args.class_balanced, False)
     hparams['shift'] = (args.shift, args.shift)
