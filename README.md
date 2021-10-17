@@ -2,7 +2,7 @@
 
 
 
-Code for **Learning Representations that Support\\ Robust Transfer of Predictors**
+Code for **Learning Representations that Support Robust Transfer of Predictors**
 
 
 
