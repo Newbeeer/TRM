@@ -105,32 +105,11 @@ def _hparams(algorithm, dataset, random_state, args):
         hparams['vrex_penalty_anneal_iters'] = (500, int(10**random_state.uniform(0, 4)))
     elif algorithm == "ERM":
         pass
-    elif algorithm == "TRM" or algorithm == "TRM2":
+    elif algorithm == "TRM":
         hparams['cos_lambda'] = (args.cos_lam, 10 ** random_state.uniform(-1, 5))
-        hparams['n'] = (100, 10**random_state.uniform(-1, 5))
-        hparams['iters'] = (100, int(10 ** random_state.uniform(0, 4)))
+        hparams['iters'] = (200, int(10 ** random_state.uniform(0, 4)))
         hparams['groupdro_eta'] = (args.dro_eta, 10 ** random_state.uniform(-3, -1))
-        if dataset == 'SceneCOCO':
-            hparams['iters'] = (200, int(10**random_state.uniform(0, 4)))
-        # elif dataset == 'PACS' or dataset == 'VLCS':
-        #     hparams['iters'] = (1000, int(10**random_state.uniform(0, 4)))
-        # elif dataset == 'OfficeHome':
-        #     hparams['iters'] = (1000, int(10**random_state.uniform(0, 4)))
-    elif algorithm == "TRM_DRO":
-        hparams['cos_lambda'] = (args.cos_lam, 10 ** random_state.uniform(-1, 5))
-        hparams['n'] = (10, 10**random_state.uniform(-1, 5))
-        if dataset == 'SceneCOCO':
-            hparams['iters'] = (200, int(10**random_state.uniform(0, 4)))
-        elif dataset == 'PACS':
-            hparams['iters'] = (100, int(10**random_state.uniform(0, 4)))
-            hparams['n'] = (50, 10 ** random_state.uniform(-1, 5))
-        elif dataset == 'Celeba':
-            hparams['iters'] = (300, int(10 ** random_state.uniform(0, 4)))
-            hparams['n'] = (50, 10 ** random_state.uniform(-1, 5))
-        else:
-            hparams['iters'] = (100, int(10 ** random_state.uniform(0, 4)))
 
-        hparams['groupdro_eta'] = (args.dro_eta, 10**random_state.uniform(-3, -1))
     return hparams
 
 def default_hparams(algorithm, dataset, args):
