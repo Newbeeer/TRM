@@ -844,10 +844,10 @@ class TRM(Algorithm):
         loss_swap = 0.0
         loss_Q_sum = 0.0
         loss_P_sum_collect = 0.0
-        loss_cos_sum = 0.0
         trm = 0.0
         # updating featurizer
         if self.update_count >= self.hparams['iters']:
+
             if self.hparams['class_balanced']:
                 # for stability when facing unbalanced labels across environments
                 for classifier in self.clist:
@@ -884,6 +884,7 @@ class TRM(Algorithm):
                 feature_split.append(feature)
                 y_split.append(y)
 
+            # estimate transfer risk
             for Q, (x, y) in enumerate(minibatches_trm):
                 sample_list = list(range(len(minibatches_trm)))
                 sample_list.remove(Q)
@@ -910,7 +911,6 @@ class TRM(Algorithm):
             trm /= len(minibatches_trm)
             loss_Q_sum /= len(minibatches_trm)
             loss_P_sum_collect /= len(minibatches_trm)
-            loss_cos_sum = loss_P_sum_collect - loss_swap.item()
         else:
             # ERM
             self.featurizer_new.train()

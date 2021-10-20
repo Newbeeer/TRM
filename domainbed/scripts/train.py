@@ -7,7 +7,6 @@ import os
 import random
 import sys
 import time
-from torchvision import transforms
 import numpy as np
 import PIL
 import torch
@@ -134,19 +133,10 @@ print("Total dataset size:", cnt)
 
 # class of env: ImageFolder
 shuffle = not args.class_balanced
-if args.class_balanced:
-    sampler = [torch.utils.data.sampler.WeightedRandomSampler(weights.double(), len(weights))
-           for i, (env, weights) in enumerate(in_splits)]
-else:
-    sampler = [None for _ in enumerate(in_splits)]
+
 train_loaders = [torch.utils.data.DataLoader(dataset=env, batch_size=hparams['batch_size'],
                  num_workers=dataset.N_WORKERS, shuffle=True) for i, (env, _) in enumerate(in_splits) if
                  i not in args.test_envs]
-# train_loaders = [torch.utils.data.DataLoader(dataset=env, sampler=sampler[i], batch_size=hparams['batch_size'],
-#                      num_workers=dataset.N_WORKERS, shuffle=shuffle) for i, (env, _) in enumerate(in_splits) if i not in args.test_envs]
-if args.class_balanced:
-    train_loaders += [torch.utils.data.DataLoader(dataset=env, sampler=sampler[i], batch_size=hparams['batch_size'],
-                     num_workers=dataset.N_WORKERS, shuffle=shuffle) for i, (env, _) in enumerate(in_splits) if i not in args.test_envs]
 
 eval_loaders = [torch.utils.data.DataLoader(dataset=env, batch_size=hparams['batch_size'], shuffle=False,
                                              num_workers=dataset.N_WORKERS)
@@ -176,11 +166,12 @@ algorithm.cuda()
 steps_per_epoch = min([len(env[0]) / hparams['batch_size'] for env in in_splits])
 print("steps per epoch:", steps_per_epoch)
 
-# if dataset.input_shape != (3, 224, 224,):
-#     steps_per_epoch = min([len(env) / hparams['batch_size'] for env in in_splits])
-#     print("steps per epoch:", steps_per_epoch)
-#     args.epochs = int(2000. / steps_per_epoch)
-checkpoint_freq = args.checkpoint_freq or dataset.CHECKPOINT_FREQ
+if dataset.input_shape != (3, 224, 224,):
+    steps_per_epoch = min([len(env) / hparams['batch_size'] for env in in_splits])
+    print("steps per epoch:", steps_per_epoch)
+    args.epochs = int(2000. / steps_per_epoch)
+else:
+    checkpoint_freq = args.checkpoint_freq or dataset.CHECKPOINT_FREQ
 last_results_keys = None
 best_acc_in = 0.
 best_acc_out = 0.
@@ -200,9 +191,6 @@ def main(epoch):
 
         step_vals = algorithm.update(minibatches_device)
 
-        # collect_dict['penalty'].append(float(step_vals['penalty']))
-        # collect_dict['nll'].append(float(step_vals['nll']))
-        # collect_dict['trm'].append(float(step_vals['trm']))
         checkpoint_vals['step_time'].append(time.time() - step_start_time)
         args.step += 1
 
@@ -227,41 +215,31 @@ def main(epoch):
             misc.print_row([results[key] for key in results_keys],
                            colwidth=12)
 
-            ########
-            if args.dataset == 'PACS' or args.dataset == 'VLCS':
+
+            if args.test_val:
+                # test set validation
                 name_in = 'env{}_in_acc'.format(args.test_envs[0])
                 name_out = 'env{}_out_acc'.format(args.test_envs[0])
-                test_acc = (results[name_in] * 0.8 + results[name_out] * 0.2)
-                val_acc = 0.
-                cnt_envs = 0.
-                for i in range(4):
-                    if i not in args.test_envs:
-                        val_acc += results['env{}_out_acc'.format(i)]
-                        cnt_envs += 1
-                val_acc = val_acc / cnt_envs
+                val_acc = results[name_in]
+                test_acc = results[name_out]
             else:
-                name_in = 'env{}_in_acc'.format(args.test_envs[0])
-                name_out = 'env{}_out_acc'.format(args.test_envs[0])
-                test_acc = (results[name_in] * 0.8 + results[name_out] * 0.2)
+                # training set validation
+                test_name_in = 'env{}_in_acc'.format(args.test_envs[0])
+                test_name_out = 'env{}_out_acc'.format(args.test_envs[0])
+                test_acc = (results[test_name_in] * (1-args.holdout_fraction) + results[test_name_out] * args.holdout_fraction)
                 val_acc = 0.
                 cnt_envs = 0.
-                for i in range(3):
+                for i in range(len(dataset)):
                     if i not in args.test_envs:
                         val_acc += results['env{}_out_acc'.format(i)]
                         cnt_envs += 1
                 val_acc = val_acc / cnt_envs
 
-            if args.test_val:
-                name_in = 'env{}_in_acc'.format(args.test_envs[0])
-                name_out = 'env{}_out_acc'.format(args.test_envs[0])
-                val_acc = results[name_in]
-                test_acc = results[name_out]
             collect_dict['acc'].append(test_acc)
             if val_acc > best_acc_in:
                 best_acc_in = val_acc
                 best_acc_out = test_acc
                 path = os.path.join(args.output_dir, f"{args.algorithm}_bias_{args.bias}_seed_{args.trial_seed}_{args.dataset}.pth")
-                # print("New best checkpoint with acc:{}".format(best_acc_out), "- save to ", path)
                 print(f"epoch:{epoch}, Val acc:{best_acc_in:.4f}, Test acc:{best_acc_out:.4f} ")
                 print('----------------------------------')
                 if args.model_save:
@@ -282,17 +260,7 @@ def main(epoch):
 
 if __name__ == "__main__":
 
-    import time
-    avg_time = 0
     print("Training epoch:", args.epochs)
     for epoch in range(args.epochs):
-        start_time = time.time()
         main(epoch)
-        end_time = time.time()
-        avg_time += (end_time - start_time)
-    print("Average time for an epoch:", avg_time / args.epochs)
     print(f"test_env:{args.test_envs[0]},shift:{args.shift},seed:{args.trial_seed},alg:{args.algorithm},bias:{args.bias}, Best val acc:{best_acc_in:.4f}, Best test acc:{best_acc_out:.4f}")
-    # np.save(f'nll_{args.algorithm}_{args.dataset}', collect_dict['nll'])
-    # np.save(f'trm_{args.algorithm}_{args.dataset}', collect_dict['trm'])
-    # np.save(f'penalty_{args.algorithm}_{args.dataset}', collect_dict['penalty'])
-    # np.save(f'acc_{args.algorithm}_{args.dataset}', collect_dict['acc'])

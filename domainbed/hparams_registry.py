@@ -37,11 +37,6 @@ def _hparams(algorithm, dataset, random_state, args):
             hparams['sch_size'] = (600, 100)
         if dataset == 'VLCS':
             hparams['batch_size'] = (16, int(2 ** random_state.uniform(3, 5)))
-        if dataset == 'Celeba':
-            # Small images
-            hparams['lr'] = (1e-4, 10 ** random_state.uniform(-4.5, -2.5))
-            hparams['batch_size'] = (32, int(2 ** random_state.uniform(3, 9)))
-            hparams['sch_size'] = (600000, 100)
     else:
         # Small images
         hparams['lr'] = (1e-1, 10**random_state.uniform(-4.5, -2.5))
@@ -49,8 +44,6 @@ def _hparams(algorithm, dataset, random_state, args):
         hparams['sch_size'] = (600, 100)
         if dataset == 'ColoredMNIST':
             args.epochs = 10
-        elif dataset == 'SceneCOCO':
-            args.epochs = 100
 
     if dataset in SMALL_IMAGES:
         hparams['weight_decay'] = (1e-4, 0.)
