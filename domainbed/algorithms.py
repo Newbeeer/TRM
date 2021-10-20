@@ -835,11 +835,6 @@ class TRM(Algorithm):
 
 
     def update(self, minibatches):
-        if self.hparams['class_balanced']:
-            minibatches_trm = minibatches[len(minibatches)//2:]
-            minibatches = minibatches[:len(minibatches)//2]
-        else:
-            minibatches_trm = minibatches
 
         loss_swap = 0.0
         trm = 0.0
@@ -857,10 +852,10 @@ class TRM(Algorithm):
             # updating original network
             loss = F.cross_entropy(self.classifier(all_feature), all_y)
 
-            for i in range(50):
+            for i in range(30):
                 all_logits_idx = 0
                 loss_erm = 0.
-                for j, (x, y) in enumerate(minibatches_trm):
+                for j, (x, y) in enumerate(minibatches):
                     # j-th domain
                     feature = all_feature[all_logits_idx:all_logits_idx + x.shape[0]]
                     all_logits_idx += x.shape[0]
@@ -875,15 +870,15 @@ class TRM(Algorithm):
             feature_split = list()
             y_split = list()
             all_logits_idx = 0
-            for i, (x, y) in enumerate(minibatches_trm):
+            for i, (x, y) in enumerate(minibatches):
                 feature = all_feature[all_logits_idx:all_logits_idx + x.shape[0]]
                 all_logits_idx += x.shape[0]
                 feature_split.append(feature)
                 y_split.append(y)
 
             # estimate transfer risk
-            for Q, (x, y) in enumerate(minibatches_trm):
-                sample_list = list(range(len(minibatches_trm)))
+            for Q, (x, y) in enumerate(minibatches):
+                sample_list = list(range(len(minibatches)))
                 sample_list.remove(Q)
 
                 loss_Q = F.cross_entropy(self.clist[Q](feature_split[Q]), y_split[Q])
@@ -891,7 +886,7 @@ class TRM(Algorithm):
                 vec_grad_Q = nn.utils.parameters_to_vector(grad_Q)
 
                 loss_P = [F.cross_entropy(self.clist[Q](feature_split[i]), y_split[i])*(self.alpha[Q, i].data.detach())
-                          if i in sample_list else 0. for i in range(len(minibatches_trm))]
+                          if i in sample_list else 0. for i in range(len(minibatches))]
                 loss_P_sum = sum(loss_P)
                 grad_P = autograd.grad(loss_P_sum, self.clist[Q].weight, create_graph=True)
                 vec_grad_P = nn.utils.parameters_to_vector(grad_P).detach()
@@ -902,8 +897,8 @@ class TRM(Algorithm):
                 for i in sample_list:
                     self.alpha[Q, i] *= (self.hparams["groupdro_eta"] * loss_P[i].data).exp()
 
-            loss_swap /= len(minibatches_trm)
-            trm /= len(minibatches_trm)
+            loss_swap /= len(minibatches)
+            trm /= len(minibatches)
         else:
             # ERM
             self.featurizer.train()
