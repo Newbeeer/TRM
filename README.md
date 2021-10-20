@@ -2,7 +2,7 @@
 
 
 
-Code for **Learning Representations that Support Robust Transfer of Predictors**
+Code for [**Learning Representations that Support Robust Transfer of Predictors**](https://github.com/Newbeeer/TRM)
 
 
 
@@ -29,7 +29,8 @@ python cocoplaces.py
 
 
 ```shell
-python -m domainbed.scripts.train  --data_dir {root} --algorithm {alg}  --dataset {dataset} --trial_seed {t_seed} --epochs {epochs}  (--resnet50)
+python -m domainbed.scripts.train  --data_dir {root} --algorithm {alg} \
+	--dataset {dataset} --trial_seed {t_seed} --epochs {epochs}  (--resnet50)
 
 root: root directory for the data
 alg: ERM, VREx, IRM, GroupDRO, Fish, MLDG, TRM
