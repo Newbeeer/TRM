@@ -796,9 +796,9 @@ class TRM(Algorithm):
                                           hparams)
         self.register_buffer('update_count', torch.tensor([0]))
         self.num_domains = num_domains
-        self.featurizer_new = networks.Featurizer(input_shape, self.hparams)
-        self.classifier = nn.Linear(self.featurizer_new.n_outputs, num_classes).cuda()
-        self.clist = [nn.Linear(self.featurizer_new.n_outputs, num_classes).cuda() for i in range(4)]
+        self.featurizer = networks.Featurizer(input_shape, self.hparams)
+        self.classifier = nn.Linear(self.featurizer.n_outputs, num_classes).cuda()
+        self.clist = [nn.Linear(self.featurizer.n_outputs, num_classes).cuda() for i in range(4)]
         self.olist = [torch.optim.SGD(
             self.clist[i].parameters(),
             lr=1e-1,
@@ -806,7 +806,7 @@ class TRM(Algorithm):
 
         if self.hparams['opt'] == 'SGD':
             self.optimizer_f = torch.optim.SGD(
-                self.featurizer_new.parameters(),
+                self.featurizer.parameters(),
                 lr=self.hparams["lr"],
                 momentum=0.9,
                 weight_decay=self.hparams['weight_decay']
@@ -819,7 +819,7 @@ class TRM(Algorithm):
             )
         elif self.hparams['opt'] == 'Adam':
             self.optimizer_f = torch.optim.Adam(
-                self.featurizer_new.parameters(),
+                self.featurizer.parameters(),
                 lr=self.hparams["lr"],
                 weight_decay=self.hparams['weight_decay']
             )
@@ -842,21 +842,18 @@ class TRM(Algorithm):
             minibatches_trm = minibatches
 
         loss_swap = 0.0
-        loss_Q_sum = 0.0
-        loss_P_sum_collect = 0.0
         trm = 0.0
         # updating featurizer
         if self.update_count >= self.hparams['iters']:
-
             if self.hparams['class_balanced']:
                 # for stability when facing unbalanced labels across environments
                 for classifier in self.clist:
                     classifier.weight.data = copy.deepcopy(self.classifier.weight.data)
             self.alpha /= self.alpha.sum(1, keepdim=True)
-            self.featurizer_new.train()
+            self.featurizer.train()
             all_x = torch.cat([x for x, y in minibatches])
             all_y = torch.cat([y for x, y in minibatches])
-            all_feature = self.featurizer_new(all_x)
+            all_feature = self.featurizer(all_x)
             # updating original network
             loss = F.cross_entropy(self.classifier(all_feature), all_y)
 
@@ -890,14 +887,12 @@ class TRM(Algorithm):
                 sample_list.remove(Q)
 
                 loss_Q = F.cross_entropy(self.clist[Q](feature_split[Q]), y_split[Q])
-                loss_Q_sum += loss_Q.item()
                 grad_Q = autograd.grad(loss_Q, self.clist[Q].weight, create_graph=True)
                 vec_grad_Q = nn.utils.parameters_to_vector(grad_Q)
 
                 loss_P = [F.cross_entropy(self.clist[Q](feature_split[i]), y_split[i])*(self.alpha[Q, i].data.detach())
                           if i in sample_list else 0. for i in range(len(minibatches_trm))]
                 loss_P_sum = sum(loss_P)
-                loss_P_sum_collect += loss_P_sum.item()
                 grad_P = autograd.grad(loss_P_sum, self.clist[Q].weight, create_graph=True)
                 vec_grad_P = nn.utils.parameters_to_vector(grad_P).detach()
                 vec_grad_P = neum(vec_grad_P, self.clist[Q], (feature_split[Q], y_split[Q]))
@@ -909,14 +904,12 @@ class TRM(Algorithm):
 
             loss_swap /= len(minibatches_trm)
             trm /= len(minibatches_trm)
-            loss_Q_sum /= len(minibatches_trm)
-            loss_P_sum_collect /= len(minibatches_trm)
         else:
             # ERM
-            self.featurizer_new.train()
+            self.featurizer.train()
             all_x = torch.cat([x for x, y in minibatches])
             all_y = torch.cat([y for x, y in minibatches])
-            all_feature = self.featurizer_new(all_x)
+            all_feature = self.featurizer(all_x)
             loss = F.cross_entropy(self.classifier(all_feature), all_y)
 
         nll = loss.item()
@@ -941,11 +934,11 @@ class TRM(Algorithm):
         return {'nll': nll, 'trm_loss': loss_swap}
 
     def predict(self, x):
-        return self.classifier(self.featurizer_new(x))
+        return self.classifier(self.featurizer(x))
 
     def train(self):
-        self.featurizer_new.train()
+        self.featurizer.train()
 
     def eval(self):
-        self.featurizer_new.eval()
+        self.featurizer.eval()
 
