@@ -962,7 +962,6 @@ class TRM(Algorithm):
             all_feature = self.featurizer_new(all_x)
             # updating original network
             loss = F.cross_entropy(self.classifier(all_feature), all_y)
-            # all_feature = all_feature.detach()
 
             for i in range(self.hparams['n']):
                 all_logits_idx = 0
@@ -978,8 +977,7 @@ class TRM(Algorithm):
                 for opt in self.olist:
                     opt.step()
 
-            #self.featurizer_new.train()
-            # all_feature = self.featurizer_new(all_x)
+            # collect (feature, y)
             feature_split = list()
             y_split = list()
             all_logits_idx = 0
@@ -1017,6 +1015,7 @@ class TRM(Algorithm):
             loss_P_sum_collect /= len(minibatches_trm)
             loss_cos_sum = loss_P_sum_collect - loss_swap.item()
         else:
+            # ERM
             self.featurizer_new.train()
             all_x = torch.cat([x for x, y in minibatches])
             all_y = torch.cat([y for x, y in minibatches])
@@ -1042,8 +1041,7 @@ class TRM(Algorithm):
         loss_swap = loss_swap.item() - nll
         self.update_count += 1
 
-        return {'nll': nll, 'trm_loss': loss_swap, 'Q_loss': loss_Q_sum, 'P_loss': loss_P_sum_collect,
-                'cos_avg': loss_cos_sum}
+        return {'nll': nll, 'trm_loss': loss_swap}
 
     def predict(self, x):
         return self.classifier(self.featurizer_new(x))
