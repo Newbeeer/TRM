@@ -612,7 +612,7 @@ class MLDG(ERM):
             loss.backward()
             self.optimizer.step()
             # updating scheduler (only for SceneCOCO and C-MNIST)
-        self.scheduler.step()
+            self.scheduler.step()
             self.update_count += 1
             return {'loss': loss.item()}
 
