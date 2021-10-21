@@ -30,7 +30,7 @@ python cocoplaces.py
 
 - Synthetic datasets for controlled experiments: ColorMNIST / SceneCOCO
 
-  <img src="https://github.com/Newbeeer/TRM/img/correlated_row.png" width="650px" />
+  <img src="https://github.com/Newbeeer/TRM/blob/main/img/correlated_row.png" width="650px" />
 
 - Real-world datasets: PACS / OfficeHome
 
