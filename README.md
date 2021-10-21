@@ -2,7 +2,7 @@
 
 
 
-Code for [**Learning Representations that Support Robust Transfer of Predictors**](https://github.com/Newbeeer/TRM)
+Code for [**Learning Representations that Support Robust Transfer of Predictors**](https://github.com/Newbeeer/TRM), Yilun Xu, Tommi Jaakkola
 
 
 
