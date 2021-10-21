@@ -28,6 +28,12 @@ python cocoplaces.py
 
 
 
+- Synthetic datasets for controlled experiments: ColorMNIST / SceneCOCO
+
+  <img src="https://github.com/Newbeeer/TRM/img/correlated_row.png" width="650px" />
+
+- Real-world datasets: PACS / OfficeHome
+
 ```shell
 python -m domainbed.scripts.train  --data_dir {root} --algorithm {alg} \
 	--dataset {dataset} --trial_seed {t_seed} --epochs {epochs}  (--resnet50)
