@@ -31,7 +31,7 @@ python cocoplaces.py
 
   <img src="https://github.com/Newbeeer/TRM/blob/main/img/correlated_row.png" width="650px" />
 
-  - Real-world datasets: PACS / OfficeHome
+  - Real-world datasets: PACS / Office-Home
 
 ```shell
 python -m domainbed.scripts.train  --data_dir {root} --algorithm {alg} \
