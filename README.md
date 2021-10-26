@@ -2,13 +2,15 @@
 
 
 
-Code for [**Learning Representations that Support Robust Transfer of Predictors**](https://arxiv.org/abs/2110.09940), Yilun Xu, Tommi Jaakkola
+Code for [**Learning Representations that Support Robust Transfer of Predictors**](https://arxiv.org/abs/2110.09940)
+
+[Yilun Xu](http://yilun-xu.com), [Tommi Jaakkola](http://people.csail.mit.edu/tommi/tommi.html)
+
+**TL,DR:**  We introduce a simple robust estimation criterion -- transfer risk -- that is specifically geared towards optimizing transfer to new environments. Effectively, the criterion amounts to finding a representation that minimizes the risk of applying any optimal predictor trained on one environment to another. The transfer risk essentially decomposes into two terms, a direct transfer term and a weighted gradient-matching term arising from the optimality of per-environment predictors. 
 
 
 
 ## Prepare the Datasets
-
-
 
 #### Preprocess the SceneCOCO dataset :
 
