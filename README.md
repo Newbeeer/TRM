@@ -20,9 +20,13 @@ python scripts/download.py --data_dir {data_dir}
 
 
 
-Places dataset can be downloaded at: http://data.csail.mit.edu/places/places365/train_256_places365standard.tar ; 
+Places dataset can be downloaded at:
 
-COCO dataset can be downloaded at: http://images.cocodataset.org/annotations/annotations_trainval2017.zip
+http://data.csail.mit.edu/places/places365/train_256_places365standard.tar ; 
+
+COCO dataset can be downloaded at:
+
+http://images.cocodataset.org/annotations/annotations_trainval2017.zip
 
 #### Preprocess the SceneCOCO dataset :
 
