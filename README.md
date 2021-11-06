@@ -53,7 +53,7 @@ python cocoplaces.py
 
 ```shell
 python -m domainbed.scripts.train  --data_dir {root} --algorithm {alg} \
-	--dataset {dataset} --trial_seed {t_seed} --epochs {epochs}  (--resnet50) (--test_eval)
+	--dataset {dataset} --trial_seed {t_seed} --epochs {epochs}  (--shift {shift}) (--resnet50) (--test_eval)
 
 root: root directory for the data
 alg: ERM, VREx, IRM, GroupDRO, Fish, MLDG, TRM
@@ -61,6 +61,7 @@ t_seed: seed for data splitting
 dataset: PACS or OfficeHome or ColoredMNIST or SceneCOCO
 epochs: training epochs
 resnet50: set ResNet50 as the backbone (default: ResNet18)
+shift: for ColoredMNIST and SceneCOCO only, 0:label-correlated; 1: label-uncorrelated; 2: combine shift.
 test_eval: test-domain validation set (default: train-domain validation set)
 ```
 
