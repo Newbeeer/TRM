@@ -280,7 +280,6 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
         super().__init__()
         self.environments = [f.name for f in os.scandir(root) if f.is_dir()]
         self.environments = sorted(self.environments)
-        print(self.environments)
         transform = transforms.Compose([
             transforms.Resize((224, 224)),
             transforms.ToTensor(),
@@ -312,16 +311,12 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
             env_dataset = ImageFolder(path,
                                       transform=env_transform)
 
-            # for j in range(len(env_dataset.classes)):
-            #     t = torch.tensor(env_dataset.targets)
-            #     print(f"env {i}, num: {torch.sum((t == j).float())}, "
-            #           f"r:{torch.sum((t == j).float())/len(env_dataset.targets)}")
             self.datasets.append(env_dataset)
 
 
         self.input_shape = (3, 224, 224,)
         self.num_classes = len(self.datasets[-1].classes)
-        print(self.num_classes)
+        print("number of classes:", self.num_classes)
 
     def __getitem__(self, index):
         return self.datasets[index]
@@ -637,58 +632,3 @@ class SceneCOCO(MultipleEnvironmentCOCO):
 
     def torch_xor_(self, a, b):
         return (a - b).abs()
-
-
-from domainbed.celeba_dataset import CelebA_group
-import copy
-class Celeba(MultipleDomainDataset):
-
-    def __init__(self, root, bias, test_envs, hparams, image_size=224):
-        super().__init__()
-        if image_size == 64:
-            transform = transforms.Compose(
-                [transforms.Resize(image_size),
-                 transforms.CenterCrop(image_size),
-                 transforms.ToTensor(),
-                 transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-                 ])
-        elif image_size == 224:
-            orig_w = 178
-            orig_h = 218
-            orig_min_dim = min(orig_w, orig_h)
-            transform = transforms.Compose([
-                transforms.CenterCrop(orig_min_dim),
-                transforms.Resize(image_size),
-                transforms.ToTensor(),
-                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-            ])
-
-        dataset_1 = CelebA_group('/data/scratch/ylxu/domainbed', 'male_blond', transform=transform, label=0)
-        dataset_2 = CelebA_group('/data/scratch/ylxu/domainbed', 'male_nonblond', transform=transform, label=1)
-        dataset_3 = CelebA_group('/data/scratch/ylxu/domainbed', 'female_blond', transform=transform, label=0)
-        dataset_4 = CelebA_group('/data/scratch/ylxu/domainbed', 'female_nonblond', transform=transform, label=1)
-        self.num_groups = 4
-        self.total_len = 0.
-
-        # print(f"dataset 1 len: {len(list(dataset_1.filename))}, dataset 2 len: {len(list(dataset_2.filename))}, "
-        #       f"dataset 3 len: {len(list(dataset_3.filename))}, dataset 4 len: {len(list(dataset_4.filename))}" )
-        # dataset_all = copy.deepcopy(dataset_1)
-        # dataset_all.filename = list(dataset_1.filename) + list(dataset_2.filename) + list(dataset_3.filename) + list(dataset_4.filename)
-        # dataset_all.label = torch.cat([dataset_1.label, dataset_2.label, dataset_3.label, dataset_4.label], dim=0)
-        # print("All :", len(dataset_all.filename), len(dataset_all.label))
-        self.datasets = [dataset_1, dataset_2, dataset_3, dataset_4]
-        self.input_shape = (3, image_size, image_size)
-        self.num_classes = 2
-        len_dict = dict()
-        for i in range(self.num_groups):
-            len_dict[i] = len(self.datasets[i])
-            self.total_len += len_dict[i]
-        for i in range(self.num_groups):
-            print(f"Dataset {i} len: {len_dict[i]}, ratio: {len_dict[i] * 1. / self.total_len}")
-        print("All len: ", self.total_len)
-
-    def __getitem__(self, index):
-        return self.datasets[index]
-
-    def __len__(self):
-        return len(self.datasets)

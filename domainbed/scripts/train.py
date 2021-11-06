@@ -23,7 +23,7 @@ parser = argparse.ArgumentParser(description='Domain generalization')
 parser.add_argument('--data_dir', type=str)
 parser.add_argument('--dataset', type=str, default="ColoredMNIST")
 parser.add_argument('--algorithm', type=str, default="ERM")
-parser.add_argument('--shift', type=int, default=0,
+parser.add_argument('--shift', type=int, default=0, choices=[0, 1, 2],
                     help="0:label-correlated; 1: label-uncorrelated; 2: combine.")
 parser.add_argument('--holdout_fraction', type=float, default=0.2)
 parser.add_argument('--opt', type=str, default="SGD")
@@ -49,20 +49,17 @@ parser.add_argument('--output_dir', type=str, default="checkpoint")
 parser.add_argument('--save_path', type=str, default="model")
 parser.add_argument('--resume_path', default="model", type=str, help='path to resume the checkpoint')
 parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
-parser.add_argument('--bias', type=float, default=0.9)
+parser.add_argument('--bias', type=float, default=0.9, help='bias degree for ColoredMNIST and SceneCOCO')
 parser.add_argument('--irm_lam', type=float, default=1)
 parser.add_argument('--rex_lam', type=float, default=1)
 parser.add_argument('--cos_lam', type=float, default=1e-4)
-parser.add_argument('--swap_lam', type=float, default=1.)
 parser.add_argument('--trm_lam', type=float, default=1.)
 parser.add_argument('--fish_lam', type=float, default=0.5)
 parser.add_argument('--iters', type=int, default=1000)
-parser.add_argument('--chunk', type=int, default=2)
 parser.add_argument('--dro_eta', type=float, default=1e-2)
 parser.add_argument('--model_save', action='store_true')
 parser.add_argument('--resnet50', action='store_true')
 parser.add_argument('--parallel', action='store_true')
-parser.add_argument('--robust', action='store_true')
 parser.add_argument('--class_balanced', action='store_true')
 parser.add_argument('--test_val', action='store_true', help="test-domain validation set")
 args = parser.parse_args()
@@ -177,6 +174,8 @@ best_acc_in = 0.
 best_acc_out = 0.
 
 collect_dict = collections.defaultdict(lambda: [])
+
+
 def main(epoch):
     global last_results_keys
     global best_acc_out
@@ -258,9 +257,11 @@ def main(epoch):
         f.write('done')
 
 
+
 if __name__ == "__main__":
 
     print("Training epoch:", args.epochs)
     for epoch in range(args.epochs):
         main(epoch)
-    print(f"test_env:{args.test_envs[0]},shift:{args.shift},seed:{args.trial_seed},alg:{args.algorithm},bias:{args.bias}, Best val acc:{best_acc_in:.4f}, Best test acc:{best_acc_out:.4f}")
+    print(f"test_env:{args.test_envs[0]},shift:{args.shift},seed:{args.trial_seed},"
+          f"alg:{args.algorithm},bias:{args.bias}, Best val acc:{best_acc_in:.4f}, Best test acc:{best_acc_out:.4f}")
