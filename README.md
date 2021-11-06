@@ -12,6 +12,12 @@ Code for [**Learning Representations that Support Robust Transfer of Predictors*
 
 ## Prepare the Datasets
 
+#### Download PACS/Office-Home/MNIST dataset:
+
+```shell
+python scripts/download.py --data_dir {data_dir}
+```
+
 #### Preprocess the SceneCOCO dataset :
 
 ```shell
