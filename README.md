@@ -53,14 +53,15 @@ python cocoplaces.py
 
 ```shell
 python -m domainbed.scripts.train  --data_dir {root} --algorithm {alg} \
-	--dataset {dataset} --trial_seed {t_seed} --epochs {epochs}  (--resnet50)
+	--dataset {dataset} --trial_seed {t_seed} --epochs {epochs}  (--resnet50) (--test_eval)
 
 root: root directory for the data
 alg: ERM, VREx, IRM, GroupDRO, Fish, MLDG, TRM
 t_seed: seed for data splitting
 dataset: PACS or OfficeHome or ColoredMNIST or SceneCOCO
-resnet50: use ResNet50 (default: ResNet18)
 epochs: training epochs
+resnet50: set ResNet50 as the backbone (default: ResNet18)
+test_eval: test-domain validation set (default: train-domain validation set)
 ```
 
 
