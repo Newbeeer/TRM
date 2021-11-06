@@ -166,8 +166,8 @@ if dataset.input_shape != (3, 224, 224,):
     steps_per_epoch = min([len(env) / hparams['batch_size'] for env in in_splits])
     print("steps per epoch:", steps_per_epoch)
     args.epochs = int(2000. / steps_per_epoch)
-else:
-    checkpoint_freq = args.checkpoint_freq or dataset.CHECKPOINT_FREQ
+
+checkpoint_freq = args.checkpoint_freq or dataset.CHECKPOINT_FREQ
 last_results_keys = None
 best_acc_in = 0.
 best_acc_out = 0.

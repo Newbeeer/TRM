@@ -146,7 +146,7 @@ class MultipleEnvironmentMNIST(MultipleDomainDataset):
 class ColoredMNIST(MultipleEnvironmentMNIST):
 
     def __init__(self, root, bias, test_envs, hparams):
-        # MY_COMBINE setting:
+        # config setting:
         # 0: random seed for environmental color;
         # 1: use default colors (True) or random colors;
         # 2: Bernoulli parameters for environmental color;
@@ -158,23 +158,23 @@ class ColoredMNIST(MultipleEnvironmentMNIST):
         #
         seed = int(torch.randint(100, [1])[0])
         if hparams['shift'] == 0:
-            MY_COMBINE = [[seed, True, 0, None, seed, True, False, 0],
+            config = [[seed, True, 0, None, seed, True, False, 0],
                           [seed, True, 1, None, seed, True, False, 0],
                           [seed, True, bias, None, seed, True, False, 0]]
         if hparams['shift'] == 1:
-            MY_COMBINE = [[seed, True, 0, None, int(torch.randint(100, [1])[0]), False, True, 0],
+            config = [[seed, True, 0, None, int(torch.randint(100, [1])[0]), False, True, 0],
                           [seed, True, 0, None, int(torch.randint(100, [1])[0]), False, True, 0],
                           [seed, True, 0, None, int(torch.randint(100, [1])[0]), False, True, 0]]
         if hparams['shift'] == 2:
-            MY_COMBINE = [[seed, True, 0, None, int(torch.randint(100, [1])[0]), True, True, 0],
+            config = [[seed, True, 0, None, int(torch.randint(100, [1])[0]), True, True, 0],
                           [seed, True, 1, None, int(torch.randint(100, [1])[0]), True, True, 0],
                           [seed, True, bias, None, int(torch.randint(100, [1])[0]), True, True, 0]]
 
-        print("MY COMBINE:", MY_COMBINE)
+        print("config:", config)
         self.vis = False
         self.input_shape = (3, 28, 28,)
         self.num_classes = 10
-        super(ColoredMNIST, self).__init__(root, MY_COMBINE, self.color_dataset, (3, 28, 28,), 10)
+        super(ColoredMNIST, self).__init__(root, config, self.color_dataset, (3, 28, 28,), 10)
 
         # TODO: set up verbose mode
 
@@ -438,92 +438,9 @@ class MultipleEnvironmentCOCO(MultipleDomainDataset):
         return len(self.datasets)
 
 
-class ColoredCOCO(MultipleEnvironmentCOCO):
-    # random seed
-    ENVIRONMENT_NAMES = [1, 2, 3]
-
-    def __init__(self, root, test_envs, hparams):
-        # MY_COMBINE setting:
-        # 0: random seed for shuffle color;
-        # 1: use default colors or random colors;
-        # 2: Bernoulli parameters for digit colors;
-        # 3: designated color number,
-        # 4: random seed for bkgd colors
-        # 5: Color digit? 6: Color Bkgd?
-        # 7: Bernoulli parameters for bkgd colors
-        # 8: removing data-augmentation or not
-        MY_COMBINE = [[2, True, 0, None, 11, True, True, 0, True], [2, True, 0.9, None, 12, True, True, 0, False],
-                      [2, True, 0.7, None, 13, True, True, 0, False]]
-        self.vis = False
-        print("MY COMBINE:", MY_COMBINE)
-        super(ColoredCOCO, self).__init__(MY_COMBINE, self.color_dataset, (3, 64, 64,), 10, False)
-
-        self.input_shape = (3, 64, 64,)
-        self.num_classes = 10
-
-    def color_dataset(self, images, labels, masks, environment):
-
-        # shuffle the colors
-        torch.manual_seed(environment[0])
-        shuffle = torch.randperm(len(self.colors))
-        self.colors_ = self.colors[shuffle] if environment[1] else torch.randint(255, (10, 3)).float()
-        # set the bernoulli r.v.
-        torch.manual_seed(environment[0])
-        ber = self.torch_bernoulli_(environment[2], len(labels))
-        print("bernoulli:", len(ber), sum(ber))
-
-        torch.manual_seed(environment[4])
-        shuffle = torch.randperm(len(self.colors))
-        bkgd_colors = torch.randint(255, (10, 3)).float()
-        torch.manual_seed(environment[4])
-        ber_obj = self.torch_bernoulli_(environment[7], len(labels))
-
-        total_len = 16 if self.vis else len(images)
-        # Apply the color to the image
-        for img_idx in range(total_len):
-            if ber[img_idx] > 0:
-                if environment[5]:
-                    place_img = 0.75 * np.multiply(np.ones((3, 64, 64), dtype='float32'),
-                                                   self.colors_[labels[img_idx]][:, None, None]) / 255.0
-                    images[img_idx] = place_img * (1 - masks[img_idx]) + images[img_idx] * masks[img_idx]
-            else:
-                if environment[5]:
-                    color = torch.randint(10, [1])[0] if environment[3] is None else environment[3]
-                    place_img = 0.75 * np.multiply(np.ones((3, 64, 64), dtype='float32'),
-                                                   self.colors_[color][:, None, None]) / 255.0
-                    images[img_idx] = place_img * (1 - masks[img_idx]) + images[img_idx] * masks[img_idx]
-
-            if ber_obj[img_idx] > 0:
-                if environment[6]:
-                    images[img_idx] = images[img_idx] * (1 - masks[img_idx]) + images[img_idx] * masks[img_idx] * \
-                                      bkgd_colors[labels[img_idx].long()].view(-1, 1, 1) / 255.0
-            else:
-                if environment[6]:
-                    color = torch.randint(5, [1])[0]
-                    images[img_idx] = images[img_idx] * (1 - masks[img_idx]) + images[img_idx] * masks[img_idx] * \
-                                      bkgd_colors[color].view(-1, 1, 1) / 255.0
-            if self.vis:
-                # visualize 10 images for sanity check
-                import matplotlib.pyplot as plt
-                plt.imsave('test_{}.png'.format(img_idx), images[img_idx].numpy().transpose(1, 2, 0))
-        if self.vis:
-            print("Visualization Done")
-            exit(0)
-        x = images.float()
-        y = labels.view(-1).long()
-
-        return TensorDataset(environment[8], x, y)
-
-    def torch_bernoulli_(self, p, size):
-        return (torch.rand(size) < p).float()
-
-    def torch_xor_(self, a, b):
-        return (a - b).abs()
-
-
 class SceneCOCO(MultipleEnvironmentCOCO):
     def __init__(self, root, bias, test_envs, hparams):
-        # MY_COMBINE setting:
+        # config setting:
         # 0: random seed for shuffle places;
         # 1: use default places or random places (deprecated in ScencCOCO);
         # 2: Bernoulli parameters for places;
@@ -535,22 +452,22 @@ class SceneCOCO(MultipleEnvironmentCOCO):
 
         seed = int(torch.randint(100, [1])[0])
         if hparams['shift'] == 0:
-            MY_COMBINE = [[seed, True, 0, None, seed, True, False, 0, True],
+            config = [[seed, True, 0, None, seed, True, False, 0, True],
                           [seed, True, 0.9, None, seed, True, False, 0, False],
                           [seed, True, bias, None, seed, True, False, 0, False]]
         if hparams['shift'] == 1:
-            MY_COMBINE = [[seed, True, 0, None, int(torch.randint(100, [1])[0]), False, True, 0, True],
+            config = [[seed, True, 0, None, int(torch.randint(100, [1])[0]), False, True, 0, True],
                           [seed, True, 0, None, int(torch.randint(100, [1])[0]), False, True, 0, False],
                           [seed, True, 0, None, int(torch.randint(100, [1])[0]), False, True, 0, False]]
         if hparams['shift'] == 2:
-            MY_COMBINE = [[seed, True, 0, None, int(torch.randint(100, [1])[0]), True, True, 0, True],
+            config = [[seed, True, 0, None, int(torch.randint(100, [1])[0]), True, True, 0, True],
                           [seed, True, 0.9, None, int(torch.randint(100, [1])[0]), True, True, 0, False],
                           [seed, True, bias, None, int(torch.randint(100, [1])[0]), True, True, 0, False]]
-        print("MY COMBINE:", MY_COMBINE)
+        print("config:", config)
         self.vis = False
         self.input_shape = (3, 64, 64,)
         self.num_classes = 10
-        super(SceneCOCO, self).__init__(MY_COMBINE, self.color_dataset, (3, 64, 64,), 10, True)
+        super(SceneCOCO, self).__init__(config, self.color_dataset, (3, 64, 64,), 10, True)
 
     def color_dataset(self, images, labels, masks, environment):
 
