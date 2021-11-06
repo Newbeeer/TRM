@@ -18,6 +18,12 @@ Code for [**Learning Representations that Support Robust Transfer of Predictors*
 python scripts/download.py --data_dir {data_dir}
 ```
 
+
+
+Places dataset can be downloaded at: http://data.csail.mit.edu/places/places365/train_256_places365standard.tar ; 
+
+COCO dataset can be downloaded at: http://images.cocodataset.org/annotations/annotations_trainval2017.zip
+
 #### Preprocess the SceneCOCO dataset :
 
 ```shell
