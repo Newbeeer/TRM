@@ -163,7 +163,7 @@ steps_per_epoch = min([len(env[0]) / hparams['batch_size'] for env in in_splits]
 print("steps per epoch:", steps_per_epoch)
 
 if dataset.input_shape != (3, 224, 224,):
-    steps_per_epoch = min([len(env) / hparams['batch_size'] for env in in_splits])
+    steps_per_epoch = min([len(env[0]) / hparams['batch_size'] for env in in_splits])
     print("steps per epoch:", steps_per_epoch)
     args.epochs = int(2000. / steps_per_epoch)
 
