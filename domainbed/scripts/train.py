@@ -53,7 +53,6 @@ parser.add_argument('--bias', type=float, default=0.9, help='bias degree for Col
 parser.add_argument('--irm_lam', type=float, default=1, help='IRM parameter')
 parser.add_argument('--rex_lam', type=float, default=1, help='VREx parameter')
 parser.add_argument('--cos_lam', type=float, default=1e-4, help='TRM parameter')
-parser.add_argument('--trm_lam', type=float, default=1., help='TRM parameter')
 parser.add_argument('--fish_lam', type=float, default=0.5, help='Fish parameter')
 parser.add_argument('--dro_eta', type=float, default=1e-2)
 parser.add_argument('--model_save', action='store_true')
@@ -163,8 +162,7 @@ steps_per_epoch = min([len(env[0]) / hparams['batch_size'] for env in in_splits]
 print("steps per epoch:", steps_per_epoch)
 
 if dataset.input_shape != (3, 224, 224,):
-    steps_per_epoch = min([len(env[0]) / hparams['batch_size'] for env in in_splits])
-    print("steps per epoch:", steps_per_epoch)
+    # training fro 2000 steps
     args.epochs = int(2000. / steps_per_epoch)
 
 checkpoint_freq = args.checkpoint_freq or dataset.CHECKPOINT_FREQ

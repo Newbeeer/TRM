@@ -840,10 +840,10 @@ class TRM(Algorithm):
         trm = 0.0
         # updating featurizer
         if self.update_count >= self.hparams['iters']:
-            if self.hparams['class_balanced']:
-                # for stability when facing unbalanced labels across environments
-                for classifier in self.clist:
-                    classifier.weight.data = copy.deepcopy(self.classifier.weight.data)
+            # if self.hparams['class_balanced']:
+            # for stability when facing unbalanced labels across environments
+            for classifier in self.clist:
+                classifier.weight.data = copy.deepcopy(self.classifier.weight.data)
             self.alpha /= self.alpha.sum(1, keepdim=True)
             self.featurizer.train()
             all_x = torch.cat([x for x, y in minibatches])
@@ -898,6 +898,7 @@ class TRM(Algorithm):
                     self.alpha[Q, i] *= (self.hparams["groupdro_eta"] * loss_P[i].data).exp()
 
             loss_swap /= len(minibatches)
+            # print(loss_swap, self.hparams['cos_lambda'] * (vec_grad_P.detach() @ vec_grad_Q))
             trm /= len(minibatches)
         else:
             # ERM
@@ -910,7 +911,8 @@ class TRM(Algorithm):
         nll = loss.item()
         self.optimizer_c.zero_grad()
         self.optimizer_f.zero_grad()
-        if self.update_count >= self.hparams['iters']:
+        #if self.update_count >= self.hparams['iters']:
+        if self.update_count >= 300:
             loss_swap = (loss + loss_swap)
         else:
             loss_swap = loss
